@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import gsap from 'gsap/all';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
 const canvas = document.querySelector('.webgl');
@@ -41,7 +42,25 @@ window.addEventListener('resize', () => {
 
 const scene = new THREE.Scene();
 
-const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+// Create an empty BufferGeometry
+const geometry = new THREE.BufferGeometry();
+
+// Create 50 triangles (450 values)
+const count = 50;
+const positionsArray = new Float32Array(count * 3 * 3);
+for (let i = 0; i < count * 3 * 3; i++) {
+	positionsArray[i] = (Math.random() - 0.5) * 4;
+}
+
+// Create the attribute and name it 'position'
+// const positionsAttribute = new THREE.BufferAttribute(positionsArray, 3);
+// geometry.setAttribute('position', positionsAttribute);
+
+const mesh = new THREE.Mesh(
+	new THREE.BoxGeometry(1, 1, 1),
+	new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide })
+);
+
 scene.add(mesh);
 
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
@@ -64,7 +83,9 @@ const clock = new THREE.Clock();
 
 const tick = () => {
 	const elapsedTime = clock.getElapsedTime();
-	mesh.rotation.y = elapsedTime * Math.PI * 0.25;
+	mesh.rotation.y = Math.PI * elapsedTime * 0.25;
+	// mesh.position.x = Math.sin(elapsedTime / 2.5) * 30;
+	// mesh.position.y = Math.cos(elapsedTime / 2.5) * 30;
 	controls.update();
 	renderer.render(scene, camera);
 	requestAnimationFrame(tick);
