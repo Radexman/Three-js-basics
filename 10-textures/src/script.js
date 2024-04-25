@@ -1,134 +1,133 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { log } from 'three/examples/jsm/nodes/Nodes.js';
+import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import gsap from 'gsap';
+import GUI from 'lil-gui';
 
-// Textures
-const loadingManager = new THREE.LoadingManager();
+// Canvas HTML Element
+const canvas = document.querySelector('.webgl');
 
-// loadingManager.onStart = () => {
-// 	console.log('Start');
-// };
-
-// loadingManager.onLoad = () => {
-// 	console.log('Loaded');
-// };
-
-// loadingManager.onProgress = () => {
-// 	console.log('Progress');
-// };
-
-// loadingManager.onError = () => {
-// 	console.log('Error');
-// };
-
-const textureLoader = new THREE.TextureLoader(loadingManager);
-const colorTexture = textureLoader.load('/textures/door/color.jpg');
-const alphaTexture = textureLoader.load('/textures/door/alpha.jpg');
-const heightTexture = textureLoader.load('/textures/door/height.jpg');
-const normalTexture = textureLoader.load('/textures/door/normal.jpg');
-const ambientOcclusionTexture = textureLoader.load('/textures/door/ambientOcclusion.jpg');
-const metalnessTexture = textureLoader.load('/textures/door/metalness.jpg');
-const roughnessTexture = textureLoader.load('/textures/door/roughness.jpg');
-
-colorTexture.colorSpace = THREE.SRGBColorSpace;
-alphaTexture.colorSpace = THREE.SRGBColorSpace;
-heightTexture.colorSpace = THREE.SRGBColorSpace;
-normalTexture.colorSpace = THREE.SRGBColorSpace;
-ambientOcclusionTexture.colorSpace = THREE.SRGBColorSpace;
-metalnessTexture.colorSpace = THREE.SRGBColorSpace;
-roughnessTexture.colorSpace = THREE.SRGBColorSpace;
-
-// colorTexture.repeat.y = 3;
-// colorTexture.repeat.x = 2;
-// colorTexture.wrapS = THREE.MirroredRepeatWrapping;
-// colorTexture.wrapT = THREE.MirroredRepeatWrapping;
-
-// colorTexture.offset.x = 0.5;
-// colorTexture.offset.y = 0.5;
-
-colorTexture.rotation = Math.PI / 4;
-colorTexture.center.x = 0.5;
-colorTexture.center.y = 0.5;
-
-/**
- * Base
- */
-// Canvas
-const canvas = document.querySelector('canvas.webgl');
-
-// Scene
-const scene = new THREE.Scene();
-
-/**
- * Object
- */
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ map: colorTexture });
-const mesh = new THREE.Mesh(geometry, material);
-scene.add(mesh);
-
-/**
- * Sizes
- */
+// Scene & Camera Sizes
 const sizes = {
-	width: window.innerWidth,
-	height: window.innerHeight,
+	width: innerWidth,
+	height: innerHeight,
 };
 
-window.addEventListener('resize', () => {
-	// Update sizes
-	sizes.width = window.innerWidth;
-	sizes.height = window.innerHeight;
+// Create GUI
+const gui = new GUI({
+	width: 300,
+	title: 'Debug UI',
+	closeFolders: true,
+});
 
-	// Update camera
+const debugObject = {
+	color: '#4dc819',
+};
+
+// Handle Toggle Show GUI
+window.addEventListener('keydown', (e) => {
+	if (e.key === 'g') {
+		gui.show(gui._hidden);
+	}
+});
+
+// Handle Toggling Full Screen
+window.addEventListener('dblclick', () => {
+	const fullscreenElement = document.fullscreenElement || document.webkitFullScreenElement;
+	if (!fullscreenElement) {
+		if (canvas.requestFullscreen) {
+			canvas.requestFullscreen();
+		} else if (canvas.webkitRequestFullScreen) {
+			canvas.webkitRequestFullScreen();
+		}
+	} else {
+		if (document.exitFullscreen) {
+			document.exitFullscreen();
+		} else if (document.webkitExitFullScreen) {
+			document.webkitExitFullScreen();
+		}
+	}
+});
+
+// Resize Event Handler
+window.addEventListener('resize', () => {
+	// Get Current Sizes
+	sizes.width = innerWidth;
+	sizes.height = innerHeight;
+
+	// Update Camera
 	camera.aspect = sizes.width / sizes.height;
 	camera.updateProjectionMatrix();
 
-	// Update renderer
+	// Update Renderer
 	renderer.setSize(sizes.width, sizes.height);
-	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
-/**
- * Camera
- */
-// Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
-camera.position.x = 1;
-camera.position.y = 1;
-camera.position.z = 1;
+// New Scene
+const scene = new THREE.Scene();
+
+// Create New Mesh
+const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: debugObject.color }));
+scene.add(mesh);
+
+// Spin Animation Tweak
+debugObject.spin = () => {
+	gsap.to(mesh.rotation, { y: mesh.rotation.y + Math.PI * 2, duration: 2 });
+};
+
+debugObject.subdivision = 2;
+
+// GUI Tweaks
+gui.add(mesh.position, 'y').min(-5).max(5).step(0.01).name('Y Axis');
+gui.add(mesh.position, 'x').min(-5).max(5).step(0.01).name('X Axis');
+gui.add(mesh.position, 'z').min(-2).max(2).step(0.01).name('Z Axis');
+gui.add(mesh.material, 'wireframe');
+gui.addColor(debugObject, 'color').onChange(() => {
+	mesh.material.color.set(debugObject.color);
+});
+gui.add(debugObject, 'spin');
+gui.add(debugObject, 'subdivision')
+	.min(1)
+	.max(20)
+	.step(1)
+	.name('Subdivision')
+	.onFinishChange(() => {
+		mesh.geometry.dispose(),
+			(mesh.geometry = new THREE.BoxGeometry(
+				1,
+				1,
+				1,
+				debugObject.subdivision,
+				debugObject.subdivision,
+				debugObject.subdivision
+			));
+	});
+
+// Create Camera
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
+camera.lookAt(mesh.position);
+camera.position.set(1, 1, 4);
 scene.add(camera);
 
-// Controls
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 
-/**
- * Renderer
- */
+// Create Renderer
 const renderer = new THREE.WebGLRenderer({
-	canvas: canvas,
+	canvas,
 	antialias: true,
 });
 renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.render(scene, camera);
 
-/**
- * Animate
- */
+// Adding Animations
 const clock = new THREE.Clock();
 
-const tick = () => {
+const animate = () => {
 	const elapsedTime = clock.getElapsedTime();
-
-	// Update controls
+	mesh.rotation.y = (Math.PI * elapsedTime) / 4;
 	controls.update();
-
-	// Render
 	renderer.render(scene, camera);
-
-	// Call tick again on the next frame
-	window.requestAnimationFrame(tick);
+	requestAnimationFrame(animate);
 };
 
-tick();
+animate();
