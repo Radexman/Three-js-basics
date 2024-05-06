@@ -2,6 +2,16 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import gsap from 'gsap';
 import GUI from 'lil-gui';
+import imageSource from '../static/textures/door/color.jpg';
+
+const image = new Image();
+
+image.onload = () => {
+	const texture = new THREE.Texture(image);
+	console.log(texture);
+};
+
+image.src = imageSource;
 
 // Canvas HTML Element
 const canvas = document.querySelector('.webgl');
@@ -124,7 +134,7 @@ const clock = new THREE.Clock();
 
 const animate = () => {
 	const elapsedTime = clock.getElapsedTime();
-	mesh.rotation.y = (Math.PI * elapsedTime) / 4;
+	// mesh.rotation.y = (Math.PI * elapsedTime) / 4;
 	controls.update();
 	renderer.render(scene, camera);
 	requestAnimationFrame(animate);
