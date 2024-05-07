@@ -2,16 +2,73 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import gsap from 'gsap';
 import GUI from 'lil-gui';
-import imageSource from '../static/textures/door/color.jpg';
 
-const image = new Image();
+// Textures, Texture Loader and Loading Manager
+const loadingManager = new THREE.LoadingManager();
 
-image.onload = () => {
-	const texture = new THREE.Texture(image);
-	console.log(texture);
-};
+// loadingManager.onStart = () => {
+// 	console.log('On Start');
+// };
+// loadingManager.onLoad = () => {
+// 	console.log('On Load');
+// };
 
-image.src = imageSource;
+// loadingManager.onProgress = () => {
+// 	console.log('On Progress');
+// };
+
+// loadingManager.onError = () => {
+// 	console.log('On Error');
+// };
+
+const textureLoader = new THREE.TextureLoader(loadingManager);
+
+// Color / Albedo Texture
+const colorTexture = textureLoader.load('/textures/minecraft.png');
+colorTexture.colorSpace = THREE.SRGBColorSpace;
+
+// Alpha Texture
+const alphaTexture = textureLoader.load('/textures/door/alpha.jpg');
+alphaTexture.colorSpace = THREE.SRGBColorSpace;
+
+// Height / Displacement Texture
+const heightTexture = textureLoader.load('textures/door/height.jpg');
+heightTexture.colorSpace = THREE.SRGBColorSpace;
+
+// Normal Texture
+const normalTexture = textureLoader.load('/textures/door/normal.jpg');
+normalTexture.colorSpace = THREE.SRGBColorSpace;
+
+// Ambient Occlusion Texture
+const ambientOcclusionTexture = textureLoader.load('textures/door/ambientOcclusion.jpg');
+ambientOcclusionTexture.colorSpace = THREE.SRGBColorSpace;
+
+// Metalness Texture
+const metalnessTexture = textureLoader.load('textures/door/metalness.jpg');
+metalnessTexture.colorSpace = THREE.SRGBColorSpace;
+
+// Roughness Texture
+const roughnessTexture = textureLoader.load('textures/door/roughness.jpg');
+roughnessTexture.colorSpace = THREE.SRGBColorSpace;
+
+// Modifying Texture Vector2 Transformations
+// colorTexture.repeat.x = 2;
+// colorTexture.repeat.y = 3;
+
+// colorTexture.wrapS = THREE.MirroredRepeatWrapping;
+// colorTexture.wrapT = THREE.MirroredRepeatWrapping;
+
+// colorTexture.offset.x = 0.5;
+// colorTexture.offset.y = 0.5;
+
+// colorTexture.rotation = Math.PI * 0.25;
+// colorTexture.center.x = 0.5;
+// colorTexture.center.y = 0.5;
+
+// Filtering and Mipmapping
+colorTexture.generateMipmaps = false;
+colorTexture.minFilter = THREE.NearestFilter;
+colorTexture.magFilter = THREE.NearestFilter;
 
 // Canvas HTML Element
 const canvas = document.querySelector('.webgl');
@@ -76,7 +133,7 @@ window.addEventListener('resize', () => {
 const scene = new THREE.Scene();
 
 // Create New Mesh
-const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: debugObject.color }));
+const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ map: colorTexture }));
 scene.add(mesh);
 
 // Spin Animation Tweak
@@ -135,6 +192,7 @@ const clock = new THREE.Clock();
 const animate = () => {
 	const elapsedTime = clock.getElapsedTime();
 	// mesh.rotation.y = (Math.PI * elapsedTime) / 4;
+	mesh.position.y = Math.cos(Math.PI * elapsedTime * 0.25);
 	controls.update();
 	renderer.render(scene, camera);
 	requestAnimationFrame(animate);
